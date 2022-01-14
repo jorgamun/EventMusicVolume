@@ -50,12 +50,16 @@ namespace EventMusicVolume
 
            if(Game1.eventUp)
             {
-                Game1.options.musicVolumeLevel = musicInsideEvent;
-                Game1.musicCategory.SetVolume(musicInsideEvent);
-                Game1.musicPlayerVolume = musicInsideEvent;
+                if(!eventTriggered)
+                {
+                    Game1.options.musicVolumeLevel = musicInsideEvent;
+                    Game1.musicCategory.SetVolume(musicInsideEvent);
+                    Game1.musicPlayerVolume = musicInsideEvent;
 
-                eventTriggered = true;
+                    eventTriggered = true;
+                }
             }
+
            else if(eventTriggered)
             {
                 Game1.options.musicVolumeLevel = musicOutsideEvent;

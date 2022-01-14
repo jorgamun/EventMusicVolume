@@ -1,7 +1,7 @@
 {
   "Name": "Event Music Volume",
   "Author": "jorgamun",
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "Description": "A niche mod to control music volume with regards to in-game events.",
   "UniqueID": "jorgamun.EventMusicVolume",
   "EntryDll": "EventMusicVolume.dll",
