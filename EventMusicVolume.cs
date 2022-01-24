@@ -22,17 +22,85 @@ namespace EventMusicVolume
         {
             //initialize and validate volume levels
             config = helper.ReadConfig<ModConfig>();
-            musicOutsideEvent = (float)config.MusicOutsideEvent / 100f;
-            musicInsideEvent = (float)config.MusicInsideEvent / 100f;
-
-            musicOutsideEvent = Math.Min(1, musicOutsideEvent);
-            musicOutsideEvent = Math.Max(0, musicOutsideEvent);
-
-            musicInsideEvent = Math.Min(1, musicInsideEvent);
-            musicInsideEvent = Math.Max(0, musicInsideEvent);
+            musicOutsideEvent = validateVolume((float)config.MusicOutsideEvent);
+            musicInsideEvent = validateVolume((float)config.MusicInsideEvent);
 
             helper.Events.GameLoop.UpdateTicking += GameLoop_UpdateTicking;
             helper.Events.GameLoop.DayStarted += GameLoop_DayStarted;
+            helper.Events.GameLoop.GameLaunched += GameLoop_GameLaunched;
+
+        }
+
+        private void GameLoop_GameLaunched(object? sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
+        {
+            //GMCM support
+            var configMenu = this.Helper.ModRegistry.GetApi<GenericModConfigMenu.IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+            if (configMenu == null) return;
+
+            configMenu.Register(mod: this.ModManifest, reset: () => this.config = new ModConfig(), save: updateConfig);
+
+            configMenu.AddSectionTitle(
+                mod: this.ModManifest,
+                text: () => "Adjust music volume levels"
+            );
+
+            configMenu.AddNumberOption(
+                mod: this.ModManifest,
+                name: () => "Music volume outside events",
+                getValue: () => this.config.MusicOutsideEvent,
+                setValue: value => this.config.MusicOutsideEvent = value,
+                min: 0,
+                max: 100,
+                interval: 5
+            );
+
+            configMenu.AddNumberOption(
+                mod: this.ModManifest,
+                name: () => "Music volume during events",
+                getValue: () => this.config.MusicInsideEvent,
+                setValue: value => this.config.MusicInsideEvent = value,
+                min: 0,
+                max: 100,
+                interval: 5
+            );
+        }
+
+        private float validateVolume(float volume)
+        {
+            volume = volume / 100f;
+            volume = Math.Min(1, volume);
+            volume = Math.Max(0, volume);
+            return volume;
+        }
+
+        private void updateConfig()
+        {
+            musicOutsideEvent = validateVolume((float)config.MusicOutsideEvent);
+            musicInsideEvent = validateVolume((float)config.MusicInsideEvent);
+
+            this.Helper.WriteConfig<ModConfig>(this.config);
+
+            if (Game1.eventUp)
+            {
+                if (!eventTriggered)
+                {
+                    Game1.options.musicVolumeLevel = musicInsideEvent;
+                    Game1.musicCategory.SetVolume(musicInsideEvent);
+                    Game1.musicPlayerVolume = musicInsideEvent;
+
+                    eventTriggered = true;
+                }
+            }
+
+            else if (eventTriggered)
+            {
+                Game1.options.musicVolumeLevel = musicOutsideEvent;
+                Game1.musicCategory.SetVolume(musicOutsideEvent);
+                Game1.musicPlayerVolume = musicOutsideEvent;
+
+                eventTriggered = false;
+            }
+
 
         }
 
